@@ -68,148 +68,43 @@ public class ProcessFragment extends Fragment {
                 .addInput("/sdcard/video1.mp4")
                 .addInput("/sdcard/video2.mp4")
                 .addInput("/sdcard/audio1.mp3")
-                .addComplexFilter(
-                        new String[]{"[0:v]"},
-                        new String[]{"crop",
-                                "720",
-                                "720"},
-                        new String[]{"split",
-                                "2"
-                        },
-                        new String[]{"[input1a][input1b]"}
-                )
-                .addComplexFilter(
-                        new String[]{"[input1a]"},
-                        new String[]{"trim",
-                                "start=2",
-                                "end=10"
-                        },
-                        new String[]{"setpts",
-                                "PTS-STARTPTS"
-                        },
-                        new String[]{"[clip1]"}
-                )
-                .addComplexFilter(
-                        new String[]{"[input1b]"},
-                        new String[]{"trim",
-                                "start=10",
-                                "end=12"
-                        },
-                        new String[]{"setpts",
-                                "PTS-STARTPTS"
-                        },
-                        new String[]{"[clip1fadeoutsource]"}
-                )
 
-                .addComplexFilter(
-                        new String[]{"[1:v]"},
-                        new String[]{"crop",
-                                "720",
-                                "720"},
-                        new String[]{"split",
-                                "2"
-                        },
-                        new String[]{"[input2a][input2b]"}
-                )
-                .addComplexFilter(
-                        new String[]{"[input2a]"},
-                        new String[]{"trim",
-                                "start=0",
-                                "end=2"
-                        },
-                        new String[]{"setpts",
-                                "PTS-STARTPTS"
-                        },
-                        new String[]{"[clip2fadeinsource]"}
-                )
-                .addComplexFilter(
-                        new String[]{"[input2b]"},
-                        new String[]{"trim",
-                                "start=2"
-                        },
-                        new String[]{"setpts",
-                                "PTS-STARTPTS"
-                        },
-                        new String[]{"[clip2]"}
-                )
+                .addComplexFilter("[0:v]", "crop=720:720", "split=2", "[input1a][input1b]")
+                .addComplexFilter("[input1a]", "trim=start=2:end=10", "setpts=PTS-STARTPTS", "[clip1]")
+                .addComplexFilter("[input1b]", "trim=start=10:end=12", "setpts=PTS-STARTPTS", "[clip1fadeoutsource]")
 
-                .addComplexFilter(
-                        new String[]{"[clip1fadeoutsource]"},
-                        new String[]{"format",
-                                "pix_fmts=yuva420p"
-                        },
-                        new String[]{"fade",
-                                "t=out",
-                                "st=0",
-                                "d=2",
-                                "alpha=1"
-                        },
-                        new String[]{"[clip1fadeout]"}
-                )
-                .addComplexFilter(
-                        new String[]{"[clip2fadeinsource]"},
-                        new String[]{"format",
-                                "pix_fmts=yuva420p"
-                        },
-                        new String[]{"fade",
-                                "t=in",
-                                "st=0",
-                                "d=2",
-                                "alpha=1"
-                        },
-                        new String[]{"[clip2fadein]"}
-                )
-                .addComplexFilter(
-                        new String[]{"[clip1fadeout]"},
-                        new String[]{"fifo"},
-                        new String[]{"[clip1fadeoutfifo]"}
-                )
-                .addComplexFilter(
-                        new String[]{"[clip2fadein]"},
-                        new String[]{"fifo"},
-                        new String[]{"[clip2fadeinfifo]"}
-                )
-                .addComplexFilter(
-                        new String[]{"[clip1fadeoutfifo]"},
-                        new String[]{"[clip2fadeinfifo]"},
-                        new String[]{"overlay"},
-                        new String[]{"[clip1to2crossfade]"}
-                )
-                .addComplexFilter(
-                        new String[]{"[clip1]"},
-                        new String[]{"[clip1to2crossfade]"},
-                        new String[]{"[clip2]"},
-                        new String[]{"concat",
-                                "n=3"
-                        },
-                        new String[]{"drawtext",
-                                "fontsize=32",
-                                "fontfile=/sdcard/plain.otf",
-                                "fontcolor=red",
-                                "textfile=/sdcard/text.txt",
-                                "y=h-15*t",
-                                "x=w-75*t"
-                        },
-                        new String[]{"drawtext",
-                                "fontsize=32",
-                                "fontfile=/sdcard/cour.ttf",
-                                "fontcolor=blue",
-                                "textfile=/sdcard/text.txt",
-                                "y=15*t",
-                                "x=50*t"
-                        },
-                        new String[]{"[output]"}
-                )
+                .addComplexFilter("[1:v]", "crop=720:720", "split=2", "[input2a][input2b]")
+                .addComplexFilter("[input2a]", "trim=start=0:end=2", "setpts=PTS-STARTPTS", "[clip2fadeinsource]")
+                .addComplexFilter("[input2b]", "trim=start=2", "setpts=PTS-STARTPTS", "[clip2]")
+
+                .addComplexFilter("[clip1fadeoutsource]", "format=pix_fmts=yuva420p",
+                        "fade=t=out:st=0:d=2:alpha=1",
+                        "[clip1fadeout]")
+                .addComplexFilter("[clip2fadeinsource]", "format=pix_fmts=yuva420p",
+                        "fade=t=in:st=0:d=2:alpha=1",
+                        "[clip2fadein]")
+
+                .addComplexFilter("[clip1fadeout]", "fifo", "[clip1fadeoutfifo]")
+                .addComplexFilter("[clip2fadein]", "fifo", "[clip2fadeinfifo]")
+                .addComplexFilter("[clip1fadeoutfifo]", "[clip2fadeinfifo]", "overlay", "[clip1to2crossfade]")
+                .addComplexFilter("[clip1]", "[clip1to2crossfade]", "[clip2]", "concat=n=3",
+                        "drawtext=fontsize=32:fontfile=/sdcard/plain.otf:fontcolor=red:textfile=/sdcard/text.txt:y=h-15*t:x=w-75*t",
+                        "drawtext=fontsize=32:fontfile=/sdcard/cour.ttf:fontcolor=blue:textfile=/sdcard/text.txt:y=15*t:x=50*t",
+                        "[output]")
+
                 .addMap("[output]")
                 .addMap("2")
+
                 .setVideoCodec("mpeg4")
                 .addParam("-vtag", "xvid")
                 .addParam("-strict", "experimental")
                 .addParam("-qscale:v", "3")
-                .addParam("-r", "30")
+                .addParam("-r", "24")
                 .addParam("-pix_fmt", "yuv420p")
                 .addParam("-level", "3.0")
+
                 .addParam("-shortest", null)
+
                 .setOutput(output_file)
                 .build();
     }

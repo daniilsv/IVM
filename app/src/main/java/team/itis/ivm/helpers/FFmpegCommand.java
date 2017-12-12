@@ -47,15 +47,15 @@ public class FFmpegCommand {
             return this;
         }
 
-        public Builder addComplexFilter(String[]... filters) {
+        public Builder addComplexFilter(String... filters) {
             StringBuilder value = new StringBuilder();
-            for (String[] filter : filters) {
-                if (filter.length == 1)
-                    value.append(filter[0]);
+            for (String filter : filters) {
+                if (filter.contains("]"))
+                    value.append(filter);
                 else {
-                    if (value.charAt(value.length() - 1) != ']')
+                    if (value.length() != 0 && value.charAt(value.length() - 1) != ']')
                         value.append(",");
-                    value.append(TextUtils.join(":", filter).replaceFirst(":", "="));
+                    value.append(filter);
                 }
             }
 
