@@ -24,16 +24,19 @@ public class FFmpegCommand {
     public class Builder {
         private ArrayList<String> mParams = new ArrayList<>();
         private ArrayList<String> mVideoFilters = new ArrayList<>();
+        private ArrayList<String> mComplexNodes = new ArrayList<>();
+        private ArrayList<String> mMap = new ArrayList<>();
+
         private String output = "";
         private String input = "";
         private String mVcodec = "mpeg4";
         private String mAcodec = "copy";
-        private String mAr = "48000";
-        private String mAb = "192k";
+        private String mAr = "44100";
+        private String mFrameRate = "24";
 
         public Builder addParam(String key, String value) {
-            if (key == null)
-                mParams.add(value);
+            if (value == null)
+                mParams.add(key);
             else
                 mParams.add(key + " " + value);
             return this;
@@ -44,8 +47,23 @@ public class FFmpegCommand {
             return this;
         }
 
-        public Builder setInput(String input) {
-            this.input = input;
+        public Builder addComplexFilter(String[]... filters) {
+            StringBuilder value = new StringBuilder();
+            for (String[] filter : filters) {
+                if (filter.length == 1)
+                    value.append(filter[0]);
+                else {
+                    if (value.charAt(value.length() - 1) != ']')
+                        value.append(",");
+                    value.append(TextUtils.join(":", filter).replaceFirst(":", "="));
+                }
+            }
+
+            mComplexNodes.add(value.toString());
+            return this;
+        }
+
+        public Builder addInput(String input) {
             addParam("-i", input);
             return this;
         }
@@ -65,15 +83,31 @@ public class FFmpegCommand {
             return this;
         }
 
+        public Builder addMap(String map) {
+            mMap.add(map);
+            return this;
+        }
+
         public FFmpegCommand build() {
             String videoFilters = TextUtils.join(",", mVideoFilters);
+            String videoComplexFilters = TextUtils.join(";", mComplexNodes);
+
+            if (mVideoFilters.size() > 0)
+                addParam("-vf", videoFilters);
+
+            if (mComplexNodes.size() > 0)
+                addParam("-filter_complex", videoComplexFilters);
+
+            for (String map : mMap) {
+                addParam("-map", map);
+            }
 
             this.addParam("-vcodec", mVcodec)
-                    .addParam("-acodec", mAcodec)
+                    //.addParam("-acodec", mAcodec)
                     .addParam("-ar", mAr)
-                    .addParam("-ab", mAb)
-                    .addParam("-vf", videoFilters)
-                    .addParam(null, output);
+                    .addParam("-r", mFrameRate);
+
+            addParam(output, null);
 
             command = TextUtils.join(" ", mParams);
             return FFmpegCommand.this;
