@@ -13,7 +13,7 @@ public class FFmpegHelper {
 
     private static final String FFMPEG_LOG_TAG = "ivm_ffmpeg";
     private static FFmpegHelper instance = null;
-    FFmpeg ffmpeg = null;
+    private FFmpeg ffmpeg = null;
 
     private FFmpegHelper() {
     }
@@ -22,29 +22,6 @@ public class FFmpegHelper {
         if (instance == null)
             instance = new FFmpegHelper();
         return instance;
-    }
-
-    private void run() {
-        String cmd = "-i /sdcard/video.mp4 " +
-                "-vcodec mpeg4 " +
-                "-acodec copy " +
-                "-ar 48000 " +
-                "-ab 192k " +
-                "-movflags faststart " +
-                "-vf " +
-
-                "drawtext=" +
-                    "fontsize=32:" +
-                    "fontfile=/sdcard/bauhs.ttf:" +
-                    "fontcolor=white:" +
-                    "textfile=/sdcard/text.txt:" +
-                    "y=h-line_h-25*t:" +
-                    "x=w-100*t," +
-                "fade=t=in:d=5," +
-                "fade=t=out:st=10:d=5" +
-
-                " /sdcard/fadeInOut" + System.currentTimeMillis() + ".mp4";
-        executeFFmpeg(cmd, null);
     }
 
     public void initFFmpeg(Context context) {
@@ -78,7 +55,10 @@ public class FFmpegHelper {
         }
     }
 
-    //TODO:Заставить принимать FFmpegCommand
+    public void executeFFmpeg(FFmpegCommand command, final ExecuteBinaryResponseHandler handler) {
+        executeFFmpeg(command.toString(), handler);
+    }
+
     public void executeFFmpeg(String cmd, final ExecuteBinaryResponseHandler handler) {
         if (ffmpeg == null)
             return;

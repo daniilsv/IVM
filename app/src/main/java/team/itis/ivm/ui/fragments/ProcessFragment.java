@@ -11,6 +11,7 @@ import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
 
 import eu.davidea.flipview.FlipView;
 import team.itis.ivm.R;
+import team.itis.ivm.helpers.FFmpegCommand;
 import team.itis.ivm.helpers.FFmpegHelper;
 
 public class ProcessFragment extends Fragment {
@@ -25,8 +26,8 @@ public class ProcessFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 flipView.showNext();
-
-                FFmpegHelper.getInstance().executeFFmpeg("-version", new ExecuteBinaryResponseHandler() {
+                FFmpegCommand command = createCommand();
+                FFmpegHelper.getInstance().executeFFmpeg(command, new ExecuteBinaryResponseHandler() {
                     @Override
                     public void onFinish() {
                         Toast.makeText(getActivity().getApplicationContext(), "Success :)))", Toast.LENGTH_LONG).show();
@@ -50,4 +51,27 @@ public class ProcessFragment extends Fragment {
         super.onResume();
     }
 
+    private FFmpegCommand createCommand() {
+        return FFmpegCommand.newBuilder()
+                .setInput("/sdcard/video.mp4")
+                .addVideoFilter("drawtext", new String[]{
+                        "fontsize=32",
+                        "fontfile=/sdcard/bauhs.ttf",
+                        "fontcolor=white",
+                        "textfile=/sdcard/text.txt",
+                        "y=h-line_h-25*t",
+                        "x=w-100*t"
+                })
+                .addVideoFilter("fade", new String[]{
+                        "t=in",
+                        "d=5"
+                })
+                .addVideoFilter("fade", new String[]{
+                        "t=out",
+                        "st=10",
+                        "d=5"
+                })
+                .setOutput("/sdcard/fadeInOut" + System.currentTimeMillis() + ".mp4")
+                .build();
+    }
 }
