@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">IVM</string>
+    <string name="app_full_name">Instagram Video Maker</string>
+    <string name="title_project">Projects</string>
+    <string name="title_views">Views</string>
+    <string name="title_text">Text</string>
+    <string name="title_music">Music</string>
+    <string name="title_process">Process</string>
+</resources>
