@@ -4,18 +4,24 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
+
+import com.miguelgaeta.media_picker.MediaPicker;
 
 import java.util.ArrayList;
 
 import team.itis.ivm.R;
 import team.itis.ivm.data.Content;
+import team.itis.ivm.ui.activities.MainActivity;
 import team.itis.ivm.ui.adapters.UniversalAdapter;
 
 public class ViewsFragment extends Fragment {
+    ArrayList<String> data = new ArrayList<>();
     RecyclerView recyclerView;
     UniversalAdapter<Content> mAdapter;
     UniversalAdapter.ItemViewHolder.ItemViewHolderCallback<Content> ivhc = new UniversalAdapter.ItemViewHolder.ItemViewHolderCallback<Content>() {
@@ -53,11 +59,20 @@ public class ViewsFragment extends Fragment {
     }
 
     private void setData() {
-        if(items.size() != 0)return;
-        items.add(new Content("11111", true, 1, 2));
-        items.add(new Content("22221", false, 1, 2));
-        items.add(new Content("3332", true, 1, 2));
-        items.add(new Content("443", false, 1, 2));
-        items.add(new Content("54", true, 1, 2));
+        if (data.size() == 0) {
+            MediaPicker.startForDocuments(this, e -> {
+
+                Log.e("MediaPicker", "Start for documents error.", e);
+            });
+            data = ((MainActivity) getActivity()).getSelectionResult();
+        }
+        try {
+            int startTime = 0, partTime = 60 / data.size();
+            for (int i = 0; i < data.size(); i++) {
+                items.add(new Content(data.get(i), true, startTime, partTime));
+                startTime += partTime;
+            }
+        } catch (Exception ex) {
+        }
     }
 }

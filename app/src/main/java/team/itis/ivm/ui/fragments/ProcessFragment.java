@@ -69,13 +69,14 @@ public class ProcessFragment extends Fragment {
                 .addInput("/sdcard/video2.mp4")
                 .addInput("/sdcard/audio1.mp3")
 
-                .addComplexFilter("[0:v]", "crop=720:720", "split=2", "[input1a][input1b]")
+                .addComplexFilter("[0:v]", "scale=w=720:h=720", "setdar=dar=16/9", "split=2", "[input1a][input1b]")
                 .addComplexFilter("[input1a]", "trim=start=2:end=10", "setpts=PTS-STARTPTS", "[clip1]")
                 .addComplexFilter("[input1b]", "trim=start=10:end=12", "setpts=PTS-STARTPTS", "[clip1fadeoutsource]")
 
-                .addComplexFilter("[1:v]", "crop=720:720", "split=2", "[input2a][input2b]")
+                .addComplexFilter("[1:v]", "scale=w=720:h=720", "setdar=dar=16/9", "split=2", "[input2a][input2b]")
                 .addComplexFilter("[input2a]", "trim=start=0:end=2", "setpts=PTS-STARTPTS", "[clip2fadeinsource]")
                 .addComplexFilter("[input2b]", "trim=start=2", "setpts=PTS-STARTPTS", "[clip2]")
+
 
                 .addComplexFilter("[clip1fadeoutsource]", "format=pix_fmts=yuva420p",
                         "fade=t=out:st=0:d=2:alpha=1",
@@ -95,10 +96,10 @@ public class ProcessFragment extends Fragment {
                 .addMap("[output]")
                 .addMap("2")
 
-                .setVideoCodec("mpeg4")
+                .setVideoCodec("h264")
                 .addParam("-vtag", "xvid")
                 .addParam("-strict", "experimental")
-                .addParam("-qscale:v", "3")
+                .addParam("-qscale:v", "30")
                 .addParam("-r", "24")
                 .addParam("-pix_fmt", "yuv420p")
                 .addParam("-level", "3.0")
