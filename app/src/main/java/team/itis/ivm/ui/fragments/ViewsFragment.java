@@ -1,5 +1,6 @@
 package team.itis.ivm.ui.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -9,6 +10,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.miguelgaeta.media_picker.MediaPicker;
+import com.miguelgaeta.media_picker.MediaPickerRequest;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import team.itis.ivm.R;
@@ -21,7 +27,7 @@ public class ViewsFragment extends Fragment {
     UniversalAdapter.ItemViewHolder.ItemViewHolderCallback<Content> ivhc = new UniversalAdapter.ItemViewHolder.ItemViewHolderCallback<Content>() {
         @Override
         public void onClick(View itemView, Content item) {
-
+            MediaPicker.startForDocuments(ViewsFragment.this, e -> e.printStackTrace());
         }
 
         @Override
@@ -53,11 +59,31 @@ public class ViewsFragment extends Fragment {
     }
 
     private void setData() {
-        if(items.size() != 0)return;
+        if (items.size() != 0) return;
         items.add(new Content("11111", true, 1, 2));
         items.add(new Content("22221", false, 1, 2));
         items.add(new Content("3332", true, 1, 2));
         items.add(new Content("443", false, 1, 2));
         items.add(new Content("54", true, 1, 2));
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        MediaPicker.handleActivityResult(getContext(), requestCode, resultCode, data, new MediaPicker.OnResult() {
+            @Override
+            public void onSuccess(File mediaFile, MediaPickerRequest request) {
+                System.out.println();
+            }
+
+            @Override
+            public void onCancelled() {
+
+            }
+
+            @Override
+            public void onError(IOException e) {
+
+            }
+        });
     }
 }
