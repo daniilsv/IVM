@@ -27,8 +27,12 @@ import team.itis.ivm.helpers.FFmpegHelper;
 public class ProcessFragment extends Fragment {
 
     private static final String COMMAND_LOG_TAG = "ffmpeg command";
-    String output_file;
     ProgressBar pb;
+    private String tmp_image_1;
+    private String tmp_image_2;
+    private String tmp_image_3;
+
+    private String outFileName;
 
     public static boolean isImageFile(String path) {
         String mimeType = URLConnection.guessContentTypeFromName(path);
@@ -51,41 +55,31 @@ public class ProcessFragment extends Fragment {
 
         final View fragment_view = inflater.inflate(R.layout.fragment_process, container, false);
         final FlipView flipView = fragment_view.findViewById(R.id.flip_view);
-        fragment_view.findViewById(R.id.start_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                flipView.showNext();
-//                getContentInfo("/sdcard/video1.mp4");
-//                getContentInfo("/sdcard/video2.mp4");
-//                getContentInfo("/sdcard/image1.png");
-//                getContentInfo("/sdcard/image2.jpg");
-                pb = fragment_view.findViewById(R.id.wait_progress);
-                pb.setMax(100);
-                FFmpegCommand command = createCommand();
-                FFmpegHelper.getInstance().executeFFmpeg(command, new ExecuteBinaryResponseHandler() {
-                    @Override
-                    public void onProgress(String message) {
-                        if (message.startsWith("frame=")) {
-                            pb.setProgress(100 * getDurationFromString(message) / 30);
-                            Log.d(COMMAND_LOG_TAG, 100 * getDurationFromString(message) / 30 + "%");
-                        }
-                    }
+        pb = fragment_view.findViewById(R.id.wait_progress);
+        pb.setMax(100);
+        File movies_dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
+        movies_dir.mkdirs();
 
-                    @Override
-                    public void onFinish() {
-                        flipView.showNext();
-                    }
-                });
+        tmp_image_1 = "/sdcard/v1.mp4";
+        tmp_image_2 = "/sdcard/v2.mp4";
+        tmp_image_3 = "/sdcard/v3.mp4";
 
-            }
+        outFileName = movies_dir.getPath() + "/output" + System.currentTimeMillis() + ".mp4";
+
+
+        fragment_view.findViewById(R.id.start_button).setOnClickListener(view -> {
+            flipView.showNext();
+            FFmpegHelper.getInstance().executeFFmpeg(createCommand(outFileName, tmp_image_1, tmp_image_2, tmp_image_3), new ExecuteBinaryResponseHandler() {
+                @Override
+                public void onFinish() {
+                    flipView.showNext();
+                }
+            });
+
         });
-        fragment_view.findViewById(R.id.share_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                createInstagramIntent(output_file);
-                flipView.flip(0, 0L);
-            }
+        fragment_view.findViewById(R.id.share_button).setOnClickListener(view -> {
+            createInstagramIntent(outFileName);
+            flipView.flip(0, 0L);
         });
         return fragment_view;
     }
@@ -116,53 +110,100 @@ public class ProcessFragment extends Fragment {
         return ret;
     }
 
-    private FFmpegCommand createCommand() {
-        File movies_dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
-        movies_dir.mkdirs();
-        output_file = movies_dir.getPath() + "/output" + System.currentTimeMillis() + ".mp4";
+    private FFmpegCommand createImageCommand(String fileName, String outFileName) {
         return FFmpegCommand.newBuilder()
-                .addInput("/sdcard/video1.mp4")
-                .addInput("/sdcard/video2.mp4")
-                .addInput("/sdcard/audio1.mp3")
+                .addParam("-f", "concat")
+                .addParam("-safe", "0")
+                .addInput(fileName)
+                .addParam("-framerate", "1/5")
+                .setVideoCodec("mpeg4")
 
-                .addComplexFilter("[0:v]", "scale=w='if(gt(a,1),-1,720):h=if(gt(a,1),720,-1)'", "crop=720:720", "split=2", "[input1a][input1b]")
-                .addComplexFilter("[input1a]", "trim=start=2:end=20", "setpts=PTS-STARTPTS", "[clip1]")
-                .addComplexFilter("[input1b]", "trim=start=20:end=22", "setpts=PTS-STARTPTS", "[clip1fadeoutsource]")
+                .setOutput(outFileName)
+                .build();
+    }
 
-                .addComplexFilter("[1:v]", "scale=w='if(gt(a,1),-1,720):h=if(gt(a,1),720,-1)'", "crop=720:720", "split=2", "[input2a][input2b]")
-                .addComplexFilter("[input2a]", "trim=start=388:end=390", "setpts=PTS-STARTPTS", "[clip2fadeinsource]")
-                .addComplexFilter("[input2b]", "trim=start=390:end=400", "setpts=PTS-STARTPTS", "[clip2]")
-
-                .addComplexFilter("[clip1fadeoutsource]", "format=pix_fmts=yuva420p",
-                        "fade=t=out:st=0:d=2:alpha=1",
-                        "[clip1fadeout]")
-                .addComplexFilter("[clip2fadeinsource]", "format=pix_fmts=yuva420p",
-                        "fade=t=in:st=0:d=2:alpha=1",
-                        "[clip2fadein]")
-
-                .addComplexFilter("[clip1fadeout]", "fifo", "[clip1fadeoutfifo]")
-                .addComplexFilter("[clip2fadein]", "fifo", "[clip2fadeinfifo]")
-                .addComplexFilter("[clip1fadeoutfifo]", "[clip2fadeinfifo]", "overlay", "[clip1to2crossfade]")
-
-                .addComplexFilter("[clip1]", "[clip1to2crossfade]", "[clip2]", "concat=n=3",
-                        "drawtext=fontsize=32:fontfile=/sdcard/plain.otf:fontcolor=red:textfile=/sdcard/text.txt:y=h-15*t:x=w-75*t",
-                        "drawtext=fontsize=32:fontfile=/sdcard/cour.ttf:fontcolor=blue:textfile=/sdcard/text.txt:y=15*t:x=50*t",
-                        "[output]")
-
+    private FFmpegCommand createCommand(String outFileName, String... videos) {
+        FFmpegCommand.Builder builder = FFmpegCommand.newBuilder();
+        for (String video : videos) {
+            builder.addInput(video);
+        }
+        builder.addInput("/sdcard/audio1.mp3");
+        for (int i = 0; i < videos.length; ++i) {
+            if (i == 0)
+                builder
+                        .addComplexFilter("[" + i + ":v]",
+                                "scale=w='if(gt(a,1),-1,720):h=if(gt(a,1),720,-1)'",
+                                "crop=720:720",
+                                "drawtext=fontsize=46:fontfile=/sdcard/plain.otf:fontcolor=red:textfile=/sdcard/text.txt:y=h-15*t:x=w-75*t",
+                                "split=2", "[input" + i + "a][input" + i + "b]")
+                        .addComplexFilter("[input" + i + "a]", "trim=start=0:end=4", "setpts=PTS-STARTPTS", "[clip" + i + "]")
+                        .addComplexFilter("[input" + i + "b]", "trim=start=4:end=5", "setpts=PTS-STARTPTS", "[clip" + i + "fadeoutsource]")
+                        .addComplexFilter("[clip" + i + "fadeoutsource]", "format=pix_fmts=yuva420p",
+                                "fade=t=out:st=0:d=1:alpha=1",
+                                "[clip" + i + "fadeout]")
+                        .addComplexFilter("[clip" + i + "fadeout]", "fifo", "[clip" + i + "fadeoutfifo]");
+            else if (i == videos.length - 1)
+                builder
+                        .addComplexFilter("[" + i + ":v]",
+                                "scale=w='if(gt(a,1),-1,720):h=if(gt(a,1),720,-1)'",
+                                "crop=720:720",
+                                "drawtext=fontsize=46:fontfile=/sdcard/plain.otf:fontcolor=red:textfile=/sdcard/text.txt:y=h-15*t:x=w-75*t",
+                                "split=2", "[input" + i + "a][input" + i + "b]")
+                        .addComplexFilter("[input" + i + "a]", "trim=start=0:end=1", "setpts=PTS-STARTPTS", "[clip" + i + "fadeinsource]")
+                        .addComplexFilter("[input" + i + "b]", "trim=start=1:end=5", "setpts=PTS-STARTPTS", "[clip" + i + "]")
+                        .addComplexFilter("[clip" + i + "fadeinsource]", "format=pix_fmts=yuva420p",
+                                "fade=t=in:st=0:d=1:alpha=1",
+                                "[clip" + i + "fadein]")
+                        .addComplexFilter("[clip" + i + "fadein]", "fifo", "[clip" + i + "fadeinfifo]")
+                        .addComplexFilter("[clip" + (i - 1) + "fadeoutfifo]", "[clip" + i + "fadeinfifo]", "overlay", "[clip" + (i - 1) + "to" + i + "crossfade]");
+            else
+                builder
+                        .addComplexFilter("[" + i + ":v]",
+                                "scale=w='if(gt(a,1),-1,720):h=if(gt(a,1),720,-1)'",
+                                "crop=720:720",
+                                "drawtext=fontsize=46:fontfile=/sdcard/plain.otf:fontcolor=red:textfile=/sdcard/text.txt:y=h-15*t:x=w-75*t",
+                                "split=3", "[input" + i + "a][input" + i + "b][input" + i + "c]")
+                        .addComplexFilter("[input" + i + "a]", "trim=start=0:end=1", "setpts=PTS-STARTPTS", "[clip" + i + "fadeinsource]")
+                        .addComplexFilter("[input" + i + "b]", "trim=start=1:end=4", "setpts=PTS-STARTPTS", "[clip" + i + "]")
+                        .addComplexFilter("[input" + i + "c]", "trim=start=4:end=5", "setpts=PTS-STARTPTS", "[clip" + i + "fadeoutsource]")
+                        .addComplexFilter("[clip" + i + "fadeoutsource]", "format=pix_fmts=yuva420p",
+                                "fade=t=out:st=0:d=1:alpha=1",
+                                "[clip" + i + "fadeout]")
+                        .addComplexFilter("[clip" + i + "fadeout]", "fifo", "[clip" + i + "fadeoutfifo]")
+                        .addComplexFilter("[clip" + i + "fadeinsource]", "format=pix_fmts=yuva420p",
+                                "fade=t=in:st=0:d=1:alpha=1",
+                                "[clip" + i + "fadein]")
+                        .addComplexFilter("[clip" + i + "fadein]", "fifo", "[clip" + i + "fadeinfifo]")
+                        .addComplexFilter("[clip" + (i - 1) + "fadeoutfifo]", "[clip" + i + "fadeinfifo]", "overlay", "[clip" + (i - 1) + "to" + i + "crossfade]");
+        }
+        String[] out = new String[videos.length * 2 + 1];
+        int j = 0;
+        for (int i = 0; i < videos.length; ++i) {
+            if (i == 0)
+                out[j++] = "[clip" + i + "]";
+            else {
+                out[j++] = "[clip" + (i - 1) + "to" + i + "crossfade]";
+                out[j++] = "[clip" + i + "]";
+            }
+        }
+        out[j++] = "concat=n=" + (videos.length * 2 - 1);
+        out[j] = "[output]";
+        builder.addComplexFilter(out);
+        return builder
                 .addMap("[output]")
-                .addMap("2")
+                .addMap("3")
 
                 .setVideoCodec("mpeg4")
                 .addParam("-vtag", "xvid")
                 .addParam("-strict", "experimental")
-                .addParam("-qscale:v", "3")
+                .addParam("-qscale:v", "5")
                 .addParam("-r", "24")
                 .addParam("-pix_fmt", "yuv420p")
                 .addParam("-level", "3.0")
 
                 .addParam("-shortest", null)
 
-                .setOutput(output_file)
+                .setOutput(outFileName)
                 .build();
     }
 

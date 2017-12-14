@@ -42,8 +42,8 @@ public class FFmpegCommand {
             return this;
         }
 
-        public Builder addVideoFilter(String key, String[] value) {
-            mVideoFilters.add(key + "=" + TextUtils.join(":", value));
+        public Builder addVideoFilter(String value) {
+            mVideoFilters.add(value);
             return this;
         }
 

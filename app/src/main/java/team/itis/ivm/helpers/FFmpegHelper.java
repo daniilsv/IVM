@@ -68,32 +68,32 @@ public class FFmpegHelper {
 
                 @Override
                 public void onStart() {
+                    Log.i(FFMPEG_LOG_TAG, "exe Finished");
                     if (handler != null) handler.onStart();
-                    else Log.i(FFMPEG_LOG_TAG, "exe Finished");
                 }
 
                 @Override
                 public void onProgress(String message) {
+                    Log.d(FFMPEG_LOG_TAG, "exe Progress: " + message);
                     if (handler != null) handler.onProgress(message);
-                    else Log.d(FFMPEG_LOG_TAG, "exe Progress: " + message);
                 }
 
                 @Override
                 public void onFailure(String message) {
+                    Log.e(FFMPEG_LOG_TAG, "exe Failure: " + message);
                     if (handler != null) handler.onFailure(message);
-                    else Log.e(FFMPEG_LOG_TAG, "exe Failure: " + message);
                 }
 
                 @Override
                 public void onSuccess(String message) {
+                    Log.i(FFMPEG_LOG_TAG, "exe Success: " + message);
                     if (handler != null) handler.onSuccess(message);
-                    else Log.i(FFMPEG_LOG_TAG, "exe Success: " + message);
                 }
 
                 @Override
                 public void onFinish() {
+                    Log.i(FFMPEG_LOG_TAG, "exe Finished");
                     if (handler != null) handler.onFinish();
-                    else Log.i(FFMPEG_LOG_TAG, "exe Finished");
                 }
             });
         } catch (FFmpegCommandAlreadyRunningException e) {
