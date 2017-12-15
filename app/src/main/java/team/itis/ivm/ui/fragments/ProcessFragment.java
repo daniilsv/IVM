@@ -16,6 +16,7 @@ import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
 
 import java.io.File;
 import java.net.URLConnection;
+import java.util.ArrayList;
 
 import eu.davidea.flipview.FlipView;
 import team.itis.ivm.BuildConfig;
@@ -44,9 +45,9 @@ public class ProcessFragment extends Fragment {
         return mimeType != null && mimeType.startsWith("video");
     }
 
-    public static int getDurationFromString(String line) {
-        String[] s = line.trim().replaceFirst(".*([0-9]{2}:[0-9]{2}:[0-9]{2}).*", "$1").split(":");
-        return 60 * 60 * Integer.parseInt(s[0]) + 60 * Integer.parseInt(s[1]) + Integer.parseInt(s[2]);
+    public static float getDurationFromString(String line) {
+        String[] s = line.trim().replaceFirst(".*([0-9]{2}):([0-9]{2}):([0-9]{2})\\.([0-9]{2}).*", "$1:$2:$3:$4").split(":");
+        return 60 * 60 * Integer.parseInt(s[0]) + 60 * Integer.parseInt(s[1]) + Integer.parseInt(s[2]) + 0.01f * Integer.parseInt(s[3]);
     }
 
     @Override
@@ -56,20 +57,28 @@ public class ProcessFragment extends Fragment {
         final View fragment_view = inflater.inflate(R.layout.fragment_process, container, false);
         final FlipView flipView = fragment_view.findViewById(R.id.flip_view);
         pb = fragment_view.findViewById(R.id.wait_progress);
-        pb.setMax(100);
+        pb.setMax(1000);
         File movies_dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
         movies_dir.mkdirs();
 
         tmp_image_1 = "/sdcard/v1.mp4";
-        tmp_image_2 = "/sdcard/v2.mp4";
+        tmp_image_2 = "/sdcard/video1.mp4";
         tmp_image_3 = "/sdcard/v3.mp4";
 
         outFileName = movies_dir.getPath() + "/output" + System.currentTimeMillis() + ".mp4";
 
+        float outDuration = 13;
 
         fragment_view.findViewById(R.id.start_button).setOnClickListener(view -> {
             flipView.showNext();
             FFmpegHelper.getInstance().executeFFmpeg(createCommand(outFileName, tmp_image_1, tmp_image_2, tmp_image_3), new ExecuteBinaryResponseHandler() {
+                @Override
+                public void onProgress(String message) {
+                    if (message.startsWith("frame="))
+                        pb.setProgress((int) (1000.f * getDurationFromString(message) / outDuration));
+
+                }
+
                 @Override
                 public void onFinish() {
                     flipView.showNext();
@@ -119,7 +128,7 @@ public class ProcessFragment extends Fragment {
                 .setVideoCodec("mpeg4")
 
                 .setOutput(outFileName)
-                .build();
+                .build(getContext());
     }
 
     private FFmpegCommand createCommand(String outFileName, String... videos) {
@@ -176,22 +185,24 @@ public class ProcessFragment extends Fragment {
                         .addComplexFilter("[clip" + i + "fadein]", "fifo", "[clip" + i + "fadeinfifo]")
                         .addComplexFilter("[clip" + (i - 1) + "fadeoutfifo]", "[clip" + i + "fadeinfifo]", "overlay", "[clip" + (i - 1) + "to" + i + "crossfade]");
         }
-        String[] out = new String[videos.length * 2 + 1];
+        ArrayList<String> out = new ArrayList<>();
         int j = 0;
         for (int i = 0; i < videos.length; ++i) {
             if (i == 0)
-                out[j++] = "[clip" + i + "]";
+                out.add("[clip" + i + "]");
             else {
-                out[j++] = "[clip" + (i - 1) + "to" + i + "crossfade]";
-                out[j++] = "[clip" + i + "]";
+                out.add("[clip" + (i - 1) + "to" + i + "crossfade]");
+                out.add("[clip" + i + "]");
             }
         }
-        out[j++] = "concat=n=" + (videos.length * 2 - 1);
-        out[j] = "[output]";
-        builder.addComplexFilter(out);
+        out.add("concat=n=" + (videos.length * 2 - 1));
+        out.add("[output]");
+        String[] outArray = new String[out.size()];
+        outArray = out.toArray(outArray);
+        builder.addComplexFilter(outArray);
         return builder
                 .addMap("[output]")
-                .addMap("3")
+                .addMap("" + videos.length)
 
                 .setVideoCodec("mpeg4")
                 .addParam("-vtag", "xvid")
@@ -204,7 +215,7 @@ public class ProcessFragment extends Fragment {
                 .addParam("-shortest", null)
 
                 .setOutput(outFileName)
-                .build();
+                .build(getContext());
     }
 
     private void createInstagramIntent(String mediaPath) {
@@ -214,5 +225,9 @@ public class ProcessFragment extends Fragment {
         Uri uri = FileProvider.getUriForFile(getContext(), BuildConfig.APPLICATION_ID, media);
         share.putExtra(Intent.EXTRA_STREAM, uri);
         startActivity(Intent.createChooser(share, "Share to"));
+    }
+
+    private void convertNext() {
+
     }
 }

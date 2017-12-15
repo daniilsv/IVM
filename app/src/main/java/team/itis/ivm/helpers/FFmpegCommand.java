@@ -1,8 +1,12 @@
 package team.itis.ivm.helpers;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class FFmpegCommand {
@@ -88,15 +92,26 @@ public class FFmpegCommand {
             return this;
         }
 
-        public FFmpegCommand build() {
-            String videoFilters = TextUtils.join(",", mVideoFilters);
-            String videoComplexFilters = TextUtils.join(";", mComplexNodes);
+        public FFmpegCommand build(Context context) {
+            if (mComplexNodes.size() > 0) {
+                String videoComplexFilters = TextUtils.join(";\n", mComplexNodes);
+                try {
+                    context.getExternalCacheDir().mkdirs();
+                    String tmpComplexFilterFile = context.getExternalCacheDir().getAbsolutePath() + "/tmp_complex_" + System.currentTimeMillis() + ".txt";
+                    BufferedWriter bw = new BufferedWriter(new FileWriter(tmpComplexFilterFile));
+                    bw.write(videoComplexFilters);
+                    bw.flush();
+                    bw.close();
+                    addParam("-filter_complex_script", tmpComplexFilterFile);
 
-            if (mVideoFilters.size() > 0)
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (mVideoFilters.size() > 0) {
+                String videoFilters = TextUtils.join(",", mVideoFilters);
                 addParam("-vf", videoFilters);
-
-            if (mComplexNodes.size() > 0)
-                addParam("-filter_complex", videoComplexFilters);
+            }
 
             for (String map : mMap) {
                 addParam("-map", map);
@@ -110,6 +125,7 @@ public class FFmpegCommand {
             addParam(output, null);
 
             command = TextUtils.join(" ", mParams);
+            System.out.println(command);
             return FFmpegCommand.this;
         }
     }

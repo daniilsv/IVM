@@ -6,7 +6,7 @@ public class Content {
     public boolean isVideo;
     public int start;
     public int end;
-    public int duration;
+    public float duration;
     public String resolution;
 
     public Content() {
