@@ -54,10 +54,5 @@ public class TextsFragment extends Fragment {
 
     private void setData() {
         if(items.size() != 0)return;
-        items.add(new Text("11111", 1, 2, 3, 4, 5));
-        items.add(new Text("22222", 1, 2, 3, 4, 5));
-        items.add(new Text("3333", 1, 2, 3, 4, 5));
-        items.add(new Text("444", 1, 2, 3, 4, 5));
-        items.add(new Text("55", 1, 2, 3, 4, 5));
     }
 }

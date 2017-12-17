@@ -4,13 +4,19 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
+
+import team.itis.ivm.data.Text;
 
 public class FFmpegCommand {
     private String command = "";
+    private ExecuteBinaryResponseHandler handler = new ExecuteBinaryResponseHandler();
 
     private FFmpegCommand() {
     }
@@ -18,6 +24,40 @@ public class FFmpegCommand {
     @NonNull
     public static Builder newBuilder() {
         return new FFmpegCommand().new Builder();
+    }
+
+    public static String generateDrawTextFilters(Context context, ArrayList<Text> texts) {
+
+        Random r = new Random();
+
+        ArrayList<String> ret = new ArrayList<>();
+        for (Text text : texts) {
+            String tmpComplexFilterFile = context.getExternalCacheDir().getAbsolutePath() + "/tmp_text_" + r.nextLong() + ".txt";
+            try {
+                BufferedWriter bw = new BufferedWriter(new FileWriter(tmpComplexFilterFile));
+                bw.write(text.text);
+                bw.flush();
+                bw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            ret.add("drawtext=fontsize=" + text.fontSize + ":" +
+                    "fontfile=/sdcard/plain.otf:" +
+                    "fontcolor=" + text.color + ":" +
+                    "textfile=" + tmpComplexFilterFile + ":" +
+                    "y=" + text.coordY + ":" +
+                    "x=" + text.coordX);
+        }
+        return TextUtils.join(",", ret);
+    }
+
+    public ExecuteBinaryResponseHandler getHandler() {
+        return handler;
+    }
+
+    public FFmpegCommand setHandler(ExecuteBinaryResponseHandler handler) {
+        this.handler = handler;
+        return this;
     }
 
     @Override
@@ -96,7 +136,6 @@ public class FFmpegCommand {
             if (mComplexNodes.size() > 0) {
                 String videoComplexFilters = TextUtils.join(";\n", mComplexNodes);
                 try {
-                    context.getExternalCacheDir().mkdirs();
                     String tmpComplexFilterFile = context.getExternalCacheDir().getAbsolutePath() + "/tmp_complex_" + System.currentTimeMillis() + ".txt";
                     BufferedWriter bw = new BufferedWriter(new FileWriter(tmpComplexFilterFile));
                     bw.write(videoComplexFilters);
