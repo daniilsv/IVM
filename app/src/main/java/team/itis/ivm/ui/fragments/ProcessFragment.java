@@ -21,8 +21,10 @@ import eu.davidea.flipview.FlipView;
 import team.itis.ivm.BuildConfig;
 import team.itis.ivm.R;
 import team.itis.ivm.data.Content;
+import team.itis.ivm.data.Sound;
 import team.itis.ivm.helpers.FFmpegCommand;
 import team.itis.ivm.helpers.FFmpegHelper;
+import team.itis.ivm.ui.activities.MainActivity;
 
 public class ProcessFragment extends Fragment {
 
@@ -55,20 +57,16 @@ public class ProcessFragment extends Fragment {
 
         convertQueue = new ArrayDeque<>();
 
-        inputs = new ArrayList<>();
-        inputs.add(Content.createContent(getContext(), "/sdcard/image1.png", 5));
-        inputs.add(Content.createContent(getContext(), "/sdcard/video1.mp4", 5));
-        inputs.add(Content.createContent(getContext(), "/sdcard/image3.jpg", 5));
-        inputs.add(Content.createContent(getContext(), "/sdcard/video3.mp4", 5));
-        inputs.add(Content.createContent(getContext(), "/sdcard/image2.jpg", 5));
+        inputs = ((MainActivity) getActivity()).getCurProject().getViewItems();
 
         processInputs();
 
+        Sound audio = new Sound("/sdcard/audio1.mp3", 43, 43 + outDuration);
         Content[] input = inputs.toArray(new Content[inputs.size()]);
 
         outFileName = movies_dir.getPath() + "/output" + System.currentTimeMillis() + ".mp4";
 
-        convertQueue.add(createCommand(outFileName, input).setHandler(new ExecuteBinaryResponseHandler() {
+        convertQueue.add(createCommand(outFileName, audio, input).setHandler(new ExecuteBinaryResponseHandler() {
             @Override
             public void onProgress(String message) {
                 if (message.startsWith("frame="))
@@ -127,15 +125,17 @@ public class ProcessFragment extends Fragment {
                 .build(getContext());
     }
 
-    private FFmpegCommand createCommand(String outFileName, Content... inputs) {
+    private FFmpegCommand createCommand(String outFileName, Sound audio, Content... inputs) {
         FFmpegCommand.Builder builder = FFmpegCommand.newBuilder();
-        builder.addInput("/sdcard/audio1.mp3");
+        builder.addInput(audio.path);
         for (Content input : inputs) {
-            if (!input.isVideo)
-                builder.addParam("-framerate", "1/" + input.duration);
-
             builder.addInput(input.path);
         }
+        builder.addComplexFilter("[0:a]",
+                "atrim=start=" + (int) audio.start + ":end=" + (int) audio.end,
+                "afade=t=in:st=0:d=1",
+                "afade=t=out:st=" + (audio.end - 1) + ":d=1",
+                "asetpts=PTS-STARTPTS");
         for (int i = 0; i < inputs.length; ++i) {
             Content content = inputs[i];
             if (i == 0)

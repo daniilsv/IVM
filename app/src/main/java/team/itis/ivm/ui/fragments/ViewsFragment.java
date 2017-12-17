@@ -1,10 +1,6 @@
 package team.itis.ivm.ui.fragments;
 
-import android.app.Activity;
-import android.content.ClipData;
-import android.content.ContentResolver;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -18,11 +14,8 @@ import android.widget.TextView;
 import com.miguelgaeta.media_picker.MediaPicker;
 import com.miguelgaeta.media_picker.MediaPickerRequest;
 
-import java.io.Console;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayList;
 
 import team.itis.ivm.R;
 import team.itis.ivm.data.Content;
@@ -35,7 +28,6 @@ public class ViewsFragment extends Fragment {
     UniversalAdapter.ItemViewHolder.ItemViewHolderCallback<Content> ivhc = new UniversalAdapter.ItemViewHolder.ItemViewHolderCallback<Content>() {
         @Override
         public void onClick(View itemView, Content item) {
-            //MediaPicker.startForDocuments(ViewsFragment.this, e -> e.printStackTrace());
         }
 
         @Override
@@ -55,12 +47,7 @@ public class ViewsFragment extends Fragment {
         recyclerView.setAdapter(mAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         Button mButton = fragment_view.findViewById(R.id.button_add);
-        mButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                MediaPicker.startForGallery(ViewsFragment.this, e -> e.printStackTrace());
-            }
-        });
+        mButton.setOnClickListener(v -> MediaPicker.startForDocuments(ViewsFragment.this, Throwable::printStackTrace));
         return fragment_view;
     }
 
@@ -75,6 +62,7 @@ public class ViewsFragment extends Fragment {
     private void setData() {
         if (((MainActivity) getActivity()).getCurProject().getViewItems().size() != 0) return;
     }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         MediaPicker.handleActivityResult(getContext(), requestCode, resultCode, data, new MediaPicker.OnResult() {
@@ -82,6 +70,7 @@ public class ViewsFragment extends Fragment {
             public void onSuccess(File mediaFile, MediaPickerRequest request) {
                 ((MainActivity) getActivity()).getCurProject().getViewItems().add(Content.createContent(getContext(), mediaFile.getAbsolutePath(), 10));
                 mAdapter.setItems(((MainActivity) getActivity()).getCurProject().getViewItems());
+                recyclerView.swapAdapter(mAdapter, false);
             }
 
             @Override
