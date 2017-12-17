@@ -14,6 +14,7 @@ import static team.itis.ivm.ui.fragments.ProcessFragment.getDurationFromString;
 
 public class Content {
     public Content originalContent = null;
+    public String name;
     public String path;
     public boolean isVideo;
     public float trimStart;
@@ -32,6 +33,13 @@ public class Content {
 
     public Content(String path, boolean isVideo, float trimStart, float trimEnd) {
         this.path = path;
+        if (originalContent == null) {
+            int pos = path.lastIndexOf("/");
+            this.name = path.substring(pos + 1);
+        } else {
+            int pos = originalContent.path.lastIndexOf("/");
+            this.name = originalContent.path.substring(pos);
+        }
         this.isVideo = isVideo;
         this.trimStart = trimStart;
         this.trimEnd = trimEnd;

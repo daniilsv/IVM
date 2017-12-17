@@ -1,6 +1,10 @@
 package team.itis.ivm.ui.fragments;
 
+import android.app.Activity;
+import android.content.ClipData;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -8,17 +12,21 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.miguelgaeta.media_picker.MediaPicker;
 import com.miguelgaeta.media_picker.MediaPickerRequest;
 
+import java.io.Console;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 
 import team.itis.ivm.R;
 import team.itis.ivm.data.Content;
+import team.itis.ivm.ui.activities.MainActivity;
 import team.itis.ivm.ui.adapters.UniversalAdapter;
 
 public class ViewsFragment extends Fragment {
@@ -27,15 +35,14 @@ public class ViewsFragment extends Fragment {
     UniversalAdapter.ItemViewHolder.ItemViewHolderCallback<Content> ivhc = new UniversalAdapter.ItemViewHolder.ItemViewHolderCallback<Content>() {
         @Override
         public void onClick(View itemView, Content item) {
-            MediaPicker.startForDocuments(ViewsFragment.this, e -> e.printStackTrace());
+            //MediaPicker.startForDocuments(ViewsFragment.this, e -> e.printStackTrace());
         }
 
         @Override
         public void setItem(View itemView, Content item) {
-            ((TextView) itemView.findViewById(R.id.titleView)).setText(item.path);
+            ((TextView) itemView.findViewById(R.id.titleView)).setText(item.name);
         }
     };
-    private ArrayList<Content> items = new ArrayList<>();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -43,10 +50,17 @@ public class ViewsFragment extends Fragment {
 
         View fragment_view = inflater.inflate(R.layout.fragment_recycler, container, false);
         recyclerView = fragment_view.findViewById(R.id.recycler_view);
-        mAdapter = new UniversalAdapter<>(items, R.layout.row_project);
+        mAdapter = new UniversalAdapter<>(((MainActivity) getActivity()).getCurProject().getViewItems(), R.layout.row_project);
         mAdapter.setItemViewHolderCallback(ivhc);
         recyclerView.setAdapter(mAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        Button mButton = fragment_view.findViewById(R.id.button_add);
+        mButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MediaPicker.startForGallery(ViewsFragment.this, e -> e.printStackTrace());
+            }
+        });
         return fragment_view;
     }
 
@@ -54,25 +68,20 @@ public class ViewsFragment extends Fragment {
     public void onResume() {
         super.onResume();
         setData();
-        mAdapter.setItems(items);
+        mAdapter.setItems(((MainActivity) getActivity()).getCurProject().getViewItems());
         recyclerView.swapAdapter(mAdapter, false);
     }
 
     private void setData() {
-        if (items.size() != 0) return;
-        items.add(new Content("11111", true, 1, 2));
-        items.add(new Content("22221", false, 1, 2));
-        items.add(new Content("3332", true, 1, 2));
-        items.add(new Content("443", false, 1, 2));
-        items.add(new Content("54", true, 1, 2));
+        if (((MainActivity) getActivity()).getCurProject().getViewItems().size() != 0) return;
     }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         MediaPicker.handleActivityResult(getContext(), requestCode, resultCode, data, new MediaPicker.OnResult() {
             @Override
             public void onSuccess(File mediaFile, MediaPickerRequest request) {
-                System.out.println();
+                ((MainActivity) getActivity()).getCurProject().getViewItems().add(Content.createContent(getContext(), mediaFile.getAbsolutePath(), 10));
+                mAdapter.setItems(((MainActivity) getActivity()).getCurProject().getViewItems());
             }
 
             @Override
@@ -82,7 +91,6 @@ public class ViewsFragment extends Fragment {
 
             @Override
             public void onError(IOException e) {
-
             }
         });
     }

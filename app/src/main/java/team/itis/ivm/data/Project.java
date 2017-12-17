@@ -1,14 +1,21 @@
 package team.itis.ivm.data;
 
+import java.util.ArrayList;
+
 public class Project {
 
     public String name;
-    public int durability;
-    public int photoId;
+    private ArrayList<Content> ViewItems = new ArrayList<>();
 
-    public Project(String name, int durability, int photoId) {
-        this.name = name;
-        this.durability = durability;
-        this.photoId = photoId;
+    public void setViewItems(ArrayList<Content> viewItems) {
+        ViewItems = viewItems;
+    }
+
+    public ArrayList<Content> getViewItems() {
+        return ViewItems;
+    }
+
+
+    public Project(String name) {
     }
 }

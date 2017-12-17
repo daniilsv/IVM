@@ -14,10 +14,14 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.View;
+
+import com.miguelgaeta.media_picker.MediaPicker;
 
 import java.util.ArrayList;
 
 import team.itis.ivm.R;
+import team.itis.ivm.data.Project;
 import team.itis.ivm.helpers.FFmpegHelper;
 import team.itis.ivm.ui.fragments.ProcessFragment;
 import team.itis.ivm.ui.fragments.ProjectsFragment;
@@ -26,6 +30,12 @@ import team.itis.ivm.ui.fragments.TextsFragment;
 import team.itis.ivm.ui.fragments.ViewsFragment;
 
 public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener {
+
+    public Project getCurProject() {
+        return curProject;
+    }
+
+    Project curProject = new Project("test");
     Fragment projectFragment, viewsFragment, textsFragment, soundsFragment;
     ProcessFragment processFragment;
     ViewPager mViewPager;
@@ -113,7 +123,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 
         return true;
     }
-
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
         ArrayList<Fragment> items = new ArrayList<>();
 

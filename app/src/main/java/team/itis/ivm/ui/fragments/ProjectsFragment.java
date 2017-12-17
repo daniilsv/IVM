@@ -54,10 +54,5 @@ public class ProjectsFragment extends Fragment {
 
     private void setData() {
         if(items.size() != 0)return;
-        items.add(new Project("11111" + System.currentTimeMillis(), 1, 2));
-        items.add(new Project("2222" + System.currentTimeMillis(), 1, 2));
-        items.add(new Project("333" + System.currentTimeMillis(), 1, 2));
-        items.add(new Project("44" + System.currentTimeMillis(), 1, 2));
-        items.add(new Project("5" + System.currentTimeMillis(), 1, 2));
     }
 }
