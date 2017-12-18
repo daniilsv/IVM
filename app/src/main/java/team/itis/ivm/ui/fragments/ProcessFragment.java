@@ -28,13 +28,9 @@ import team.itis.ivm.ui.activities.MainActivity;
 
 public class ProcessFragment extends Fragment {
 
-    private static final String COMMAND_LOG_TAG = "ffmpeg command";
     ProgressBar pb;
     ArrayList<Content> inputs;
     float outDuration = 0;
-    private Content image_1;
-    private Content video_2;
-    private Content image_3;
     private String outFileName;
     private ArrayDeque<FFmpegCommand> convertQueue;
 
@@ -44,8 +40,7 @@ public class ProcessFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         final View fragment_view = inflater.inflate(R.layout.fragment_process, container, false);
         final FlipView flipView = fragment_view.findViewById(R.id.flip_view);
@@ -135,13 +130,15 @@ public class ProcessFragment extends Fragment {
                 "atrim=start=" + (int) audio.start + ":end=" + (int) audio.end,
                 "afade=t=in:st=0:d=1",
                 "afade=t=out:st=" + (audio.end - 1) + ":d=1",
-                "asetpts=PTS-STARTPTS");
+                "asetpts=PTS-STARTPTS",
+                "[audio]");
         for (int i = 0; i < inputs.length; ++i) {
             Content content = inputs[i];
             if (i == 0)
                 builder
                         .addComplexFilter("[" + (i + 1) + ":v]",
                                 "scale=w='if(gt(a,1),-1,720):h=if(gt(a,1),720,-1)'",
+                                "setsar=sar=1",
                                 "crop=720:720",
                                 FFmpegCommand.generateDrawTextFilters(getContext(), content.texts),
                                 "split=2", "[input" + i + "a][input" + i + "b]")
@@ -155,6 +152,7 @@ public class ProcessFragment extends Fragment {
                 builder
                         .addComplexFilter("[" + (i + 1) + ":v]",
                                 "scale=w='if(gt(a,1),-1,720):h=if(gt(a,1),720,-1)'",
+                                "setsar=sar=1",
                                 "crop=720:720",
                                 FFmpegCommand.generateDrawTextFilters(getContext(), content.texts),
                                 "split=2", "[input" + i + "a][input" + i + "b]")
@@ -169,6 +167,7 @@ public class ProcessFragment extends Fragment {
                 builder
                         .addComplexFilter("[" + (i + 1) + ":v]",
                                 "scale=w='if(gt(a,1),-1,720):h=if(gt(a,1),720,-1)'",
+                                "setsar=sar=1",
                                 "crop=720:720",
                                 FFmpegCommand.generateDrawTextFilters(getContext(), content.texts),
                                 "split=3", "[input" + i + "a][input" + i + "b][input" + i + "c]")
@@ -202,7 +201,7 @@ public class ProcessFragment extends Fragment {
         builder.addComplexFilter(outArray);
         return builder
                 .addMap("[output]")
-                .addMap("0")
+                .addMap("[audio]")
 
                 .setVideoCodec("mpeg4")
                 .addParam("-vtag", "xvid")

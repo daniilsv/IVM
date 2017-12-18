@@ -59,7 +59,7 @@ public class Content {
                     String[] lines = message.split("\n");
                     for (String line : lines) {
                         if (ret.duration == -1 && line.contains("Duration")) {
-                            ret.duration = getDurationFromString(line);
+                            ret.setDuration(getDurationFromString(line));
                         } else if (ret.resolution == null && line.contains("Stream #")) {
                             ret.resolution = line.trim().replaceFirst(".* ([0-9]+x[0-9]+).*", "$1");
                         }

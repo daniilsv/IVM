@@ -42,7 +42,7 @@ public class ViewsFragment extends Fragment {
 
         View fragment_view = inflater.inflate(R.layout.fragment_recycler, container, false);
         recyclerView = fragment_view.findViewById(R.id.recycler_view);
-        mAdapter = new UniversalAdapter<>(((MainActivity) getActivity()).getCurProject().getViewItems(), R.layout.row_project);
+        mAdapter = new UniversalAdapter<>(((MainActivity) getActivity()).getCurProject().getViewItems(), R.layout.row_content);
         mAdapter.setItemViewHolderCallback(ivhc);
         recyclerView.setAdapter(mAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -70,7 +70,7 @@ public class ViewsFragment extends Fragment {
             public void onSuccess(File mediaFile, MediaPickerRequest request) {
                 ((MainActivity) getActivity()).getCurProject().getViewItems().add(Content.createContent(getContext(), mediaFile.getAbsolutePath(), 10));
                 mAdapter.setItems(((MainActivity) getActivity()).getCurProject().getViewItems());
-                recyclerView.swapAdapter(mAdapter, false);
+                recyclerView.swapAdapter(mAdapter, true);
             }
 
             @Override
